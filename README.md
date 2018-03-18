@@ -15,6 +15,8 @@ The containers can be seq of any type. In the future this will be generalized to
 
 Currently `forEach` and `forEachIndexed` are implemented. A `loopfusion` macro is coming soon™.
 
+Note: at the moment all the seqs must contain the same element type.
+
 ### Usage
 
 ```Nim
@@ -43,13 +45,16 @@ index: 2, 160
 ```Nim
 import loopfusion
 
-let a = @[1, 2, 3]
-let b = @[11, 12, 13]
-let c = @[10, 10, 10]
+let a = @[false, true, false, true, false]
+let b = @[1, 2, 3, 4, 5]
+let c = @["a: ", "b: ", "c: ", "d: ", "e: "]
 var d: seq[int] = @[]
 
 forEachIndexed j, [x, y, z], [a, b, c]:
-  d.add (x + y) * z * j
+  if x:
+    d.add $(y*y)
+  else:
+    d.add $y
 
 echo d
 ```
