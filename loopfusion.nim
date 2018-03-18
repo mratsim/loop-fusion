@@ -101,7 +101,7 @@ macro generateZip(zipName: NimNode, index: untyped, enumerate: static[bool], arg
   # 4. Make it visible
   result.add zipImpl
 
-macro forEachImpl*[N: static[int]](
+macro forEachImpl[N: static[int]](
   index: untyped,
   enumerate: static[bool],
   values: untyped,
@@ -178,12 +178,24 @@ template forEachIndexed*[N: static[int]](
   forEachImpl(index, true, values, containers, loopBody)
 
 when isMainModule:
-  let a = @[1, 2, 3]
-  let b = @[11, 12, 13, 10]
-  let c = @[10, 10, 10]
+  block:
+    let a = @[1, 2, 3]
+    let b = @[11, 12, 13]
+    let c = @[10, 10, 10]
 
-  forEach [x, y, z], [a, b, c]:
-    echo (x + y) * z
+    forEach [x, y, z], [a, b, c]:
+      echo (x + y) * z
 
-  forEachIndexed j, [x, y, z], [a, b, c]:
-    echo "index: " & $j & ", " & $((x + y) * z)
+    forEachIndexed j, [x, y, z], [a, b, c]:
+      echo "index: " & $j & ", " & $((x + y) * z)
+
+  block:
+    let a = @[1, 2, 3]
+    let b = @[11, 12, 13]
+    let c = @[10, 10, 10]
+    var d: seq[int] = @[]
+
+    forEachIndexed j, [x, y, z], [a, b, c]:
+      d.add (x + y) * z * j
+
+    echo d
