@@ -13,7 +13,7 @@ Iterate efficiently over a variadic number of containers.
 
 The containers can be seq of any type. In the future this will be generalized to `openarray` or even an `Iterable` concept.
 
-Currently `forEach` and `forEachIndexed`
+Currently `forEach` and `forEachIndexed` are implemented. A `loopfusion` macro is coming soon™.
 
 ### Usage
 
