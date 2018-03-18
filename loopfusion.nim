@@ -177,6 +177,66 @@ template forEachIndexed*[N: static[int]](
 
   forEachImpl(index, true, values, containers, loopBody)
 
+proc replaceNodes(ast: NimNode, values: NimNode, containers: NimNode): NimNode =
+  # Args:
+  #   - The full syntax tree
+  #   - an array of replacement value
+  #   - an array of identifiers to replace
+  proc inspect(node: NimNode): NimNode =
+    case node.kind:
+    of {nnkIdent, nnkSym}:
+      for i, c in containers:
+        if node.eqIdent($c):
+          return values[i]
+      return node
+    of nnkEmpty:
+      return node
+    else:
+      var rTree = node.kind.newTree()
+      for child in node:
+        rTree.add inspect(child)
+      return rTree
+
+  result = inspect(ast)
+
+macro loopfusion*(
+  containers: varargs[seq],
+  loopBody: untyped
+  ): untyped =
+  ## Loop without temporaries over any number of seq
+  ##
+  ## Example:
+  ##
+  ## let a = @[1, 2, 3]
+  ## let b = @[11, 12, 13]
+  ## let c = @[10, 10, 10]
+  ##
+  ## let d = @[5, 6, 7]
+  ##
+  ## loopfusion(d,a,b,c):
+  ##   let z = b + c
+  ##   echo d + a * z
+
+  let N = containers.len
+
+  # 2. Prepare the replacement values
+  var values = nnkBracket.newTree
+  for i in 0 ..< N:
+    values.add ident($containers[i] & "_loopfusion_")
+
+  # 3. Replace the AST
+  let replacedAST = replaceNodes(loopBody, values, containers)
+
+  # 4. ForEach wants array
+  var arrayContainer = nnkBracket.newTree
+  for i in 0 ..< N:
+    arrayContainer.add containers[i]
+
+  # 5. Finalize
+  result = quote do:
+    forEach(`values`, `arrayContainer`, `replacedAST`)
+
+
 when isMainModule:
   block:
     let a = @[1, 2, 3]
@@ -199,3 +259,14 @@ when isMainModule:
       d.add (x + y) * z * j
 
     echo d
+
+  block:
+    let a = @[1, 2, 3]
+    let b = @[11, 12, 13]
+    let c = @[10, 10, 10]
+
+    let d = @[5, 6, 7]
+
+    loopfusion(d,a,b,c):
+      let z = b + c
+      echo d + a * z

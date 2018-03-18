@@ -13,9 +13,13 @@ Iterate efficiently over a variadic number of containers.
 
 The containers can be seq of any type. In the future this will be generalized to `openarray` or even an `Iterable` concept.
 
-Currently `forEach` and `forEachIndexed` are implemented. A `loopfusion` macro is coming soon™.
+#### Known limitations
 
-Note: at the moment all the seqs must contain the same element type.
+At the moment:
+
+  - all the seqs must contain the same element type.
+  - the iteration values cannot be assigned to.
+
 
 ### Usage
 
@@ -60,4 +64,22 @@ echo d
 ```
 ```
 @[0, 140, 320]
+```
+```Nim
+import loopfusion
+
+let a = @[1, 2, 3]
+let b = @[11, 12, 13]
+let c = @[10, 10, 10]
+
+let d = @[5, 6, 7]
+
+loopfusion(d,a,b,c):
+  let z = b + c
+  echo d + a * z
+```
+```
+26
+50
+76
 ```
