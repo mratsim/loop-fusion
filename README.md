@@ -29,18 +29,19 @@ At the moment:
 import loopfusion
 
 let a = @[1, 2, 3]
-let b = @[11, 12, 13, 10]
+let b = @[11, 12, 13]
 let c = @[10, 10, 10]
 
-forEach [x, y, z], [a, b, c]:
+forEach x in a, y in b, z in c:
   echo (x + y) * z
 
 # 120
 # 140
 # 160
 
-forEachIndexed j, [x, y, z], [a, b, c]:
-  echo "index: " & $j & ", " & $((x + y) * z)
+# i is the iteration index [0, 1, 2]
+forEach i, x in a, y in b, z in c:
+  d.add (x + y) * z * i
 
 # index: 0, 120
 # index: 1, 140
@@ -71,14 +72,6 @@ Suggestions welcome.
 
 I have noted the following:
 
-### Syntax
-```Nim
-forEachIndexed j, x in xs, y in ys, z in zs:
-  ...
-```
-
-See #1
-
 ### Names
 
 Loopfusion might be a bit confusing since there is no loop to fuse at start.
@@ -103,7 +96,7 @@ For expression would be a great boon and would allow something similar to:
 let As = @[1, 2, 3]
 let Bs = @[10, 10, 10]
 
-let c = forEach [a, b], [As, Bs]:
+let c = forEach a in As, b in Bs:
           (a * b) + b
 
 echo c # @[11, 22, 33]
