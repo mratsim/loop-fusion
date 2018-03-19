@@ -9,11 +9,13 @@ Iterate efficiently over a variadic number of containers.
   * The loop structure is generated inline at compile-time.
   * There are no temporary allocation.
 
-### Status
+## Status
 
 The containers can be seq of any type. In the future this will be generalized to `openarray` or even an `Iterable` concept.
 
-#### Known limitations
+The API is not settled yet.
+
+### Known limitations
 
 At the moment:
 
@@ -21,7 +23,7 @@ At the moment:
   - the iteration values cannot be assigned to.
 
 
-### Usage
+## Usage
 
 ```Nim
 import loopfusion
@@ -33,38 +35,18 @@ let c = @[10, 10, 10]
 forEach [x, y, z], [a, b, c]:
   echo (x + y) * z
 
+# 120
+# 140
+# 160
+
 forEachIndexed j, [x, y, z], [a, b, c]:
   echo "index: " & $j & ", " & $((x + y) * z)
+
+# index: 0, 120
+# index: 1, 140
+# index: 2, 160
 ```
 
-```
-120
-140
-160
-index: 0, 120
-index: 1, 140
-index: 2, 160
-```
-
-```Nim
-import loopfusion
-
-let a = @[false, true, false, true, false]
-let b = @[1, 2, 3, 4, 5]
-let c = @["a: ", "b: ", "c: ", "d: ", "e: "]
-var d: seq[int] = @[]
-
-forEachIndexed j, [x, y, z], [a, b, c]:
-  if x:
-    d.add $(y*y)
-  else:
-    d.add $y
-
-echo d
-```
-```
-@[0, 140, 320]
-```
 ```Nim
 import loopfusion
 
@@ -77,9 +59,52 @@ let d = @[5, 6, 7]
 loopFusion(d,a,b,c):
   let z = b + c
   echo d + a * z
+
+# 26
+# 50
+# 76
 ```
+
+## Future API and naming
+
+Suggestions welcome.
+
+I have noted the following:
+
+### Syntax
+```Nim
+forEachIndexed j, x in xs, y in ys, z in zs:
+  ...
 ```
-26
-50
-76
+
+See #1
+
+### Names
+
+Loopfusion might be a bit confusing since there is no loop to fuse at start.
+In spirit however, it is similar while "real" loop fusion merge multiple loops over multiple sequences.
+
+Alternative names proposed: lift, loopover
+
+At one point it would be convenient to have an `elementwise` block that does:
+
+```Nim
+elementwise:
+  a += b * c
+```
+
+Naming up to discussion as well.
+
+### Pending upstream
+
+For expression would be a great boon and would allow something similar to:
+
+```Nim
+let As = @[1, 2, 3]
+let Bs = @[10, 10, 10]
+
+let c = forEach [a, b], [As, Bs]:
+          (a * b) + b
+
+echo c # @[11, 22, 33]
 ```
