@@ -1,6 +1,6 @@
 import macros
 
-proc getSubType*(T: NimNode): NimNode =
+proc getSubType(T: NimNode): NimNode =
   # Get the subtype T of an input
   result = getTypeInst(T)[1]
 
