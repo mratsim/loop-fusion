@@ -199,7 +199,7 @@ proc replaceNodes(ast: NimNode, values: NimNode, containers: NimNode): NimNode =
 
   result = inspect(ast)
 
-macro loopfusion*(
+macro loopFusion*(
   containers: varargs[seq],
   loopBody: untyped
   ): untyped =
@@ -213,7 +213,7 @@ macro loopfusion*(
   ##
   ## let d = @[5, 6, 7]
   ##
-  ## loopfusion(d,a,b,c):
+  ## loopFusion(d,a,b,c):
   ##   let z = b + c
   ##   echo d + a * z
 
@@ -222,7 +222,7 @@ macro loopfusion*(
   # 2. Prepare the replacement values
   var values = nnkBracket.newTree
   for i in 0 ..< N:
-    values.add ident($containers[i] & "_loopfusion_")
+    values.add ident($containers[i] & "_loopFusion_")
 
   # 3. Replace the AST
   let replacedAST = replaceNodes(loopBody, values, containers)
@@ -267,6 +267,6 @@ when isMainModule:
 
     let d = @[5, 6, 7]
 
-    loopfusion(d,a,b,c):
+    loopFusion(d,a,b,c):
       let z = b + c
       echo d + a * z

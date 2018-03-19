@@ -74,7 +74,7 @@ let c = @[10, 10, 10]
 
 let d = @[5, 6, 7]
 
-loopfusion(d,a,b,c):
+loopFusion(d,a,b,c):
   let z = b + c
   echo d + a * z
 ```
