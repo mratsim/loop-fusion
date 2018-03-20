@@ -36,6 +36,8 @@ forEach x in a, y in b, z in c:
 # 140
 # 160
 
+var d: seq[int] = @[]
+
 # i is the iteration index [0, 1, 2]
 forEach i, x in a, y in b, z in c:
   d.add (x + y) * z * i
