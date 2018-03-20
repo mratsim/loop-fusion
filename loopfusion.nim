@@ -152,12 +152,26 @@ macro forEach*(args: varargs[untyped]): untyped =
 
   ## Example:
   ##
+  ## import loopfusion
+  ##
   ## let a = @[1, 2, 3]
   ## let b = @[11, 12, 13]
   ## let c = @[10, 10, 10]
   ##
-  ## forEach [x, y, z], [a, b, c]:
+  ## forEach x in a, y in b, z in c:
   ##   echo (x + y) * z
+  ##
+  ## # 120
+  ## # 140
+  ## # 160
+  ##
+  ## var d: seq[int] = @[]
+  ##
+  ## # i is the iteration index [0, 1, 2]
+  ## forEach i, x in a, y in b, z in c:
+  ##   d.add (x + y) * z * i
+  ##
+  ## echo d # @[0, 140, 320]
 
   # In an untyped context, we can't deal with types at all so we reformat the args
   # and then pass the new argument to a typed macro
@@ -165,7 +179,7 @@ macro forEach*(args: varargs[untyped]): untyped =
   var params = args
   var loopBody = params.pop
 
-  var index = getType(int) # to be replaced with the index variable if applicable
+  var index = getType(int) # to be replaced with the index variable if there is one
   var values = nnkBracket.newTree()
   var containers = nnkBracket.newTree()
   var N = 0
