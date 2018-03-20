@@ -13,15 +13,12 @@ Iterate efficiently over a variadic number of containers.
 
 The containers can be seq of any type. In the future this will be generalized to `openarray` or even an `Iterable` concept.
 
-The API is not settled yet.
-
 ### Known limitations
 
 At the moment:
 
   - all the seqs must contain the same element type.
   - the iteration values cannot be assigned to.
-
 
 ## Usage
 
@@ -46,11 +43,14 @@ forEach i, x in a, y in b, z in c:
 echo d # @[0, 140, 320]
 ```
 
-## Future API and naming
+## Name
 
-Suggestions welcome.
+The library name "Loop fusion" might be a bit confusing since there is no loop to fuse at start.
+In spirit however, it is similar while "real" loop fusion merge multiple loops over multiple sequences.
 
-I have noted the following:
+It's also marketable =) (check loop fusion + \<insert favorite language\>)
+
+## The future
 
 ### Pending upstream
 
@@ -94,12 +94,3 @@ elementwise:
   let z = b[1] + c[2] # How to tell that b[1] and c[2] are invariants? This is "untyped" when the macro operates.
   echo d + a * z
 ```
-
-### Names
-
-The library name "Loop fusion" might be a bit confusing since there is no loop to fuse at start.
-In spirit however, it is similar while "real" loop fusion merge multiple loops over multiple sequences.
-
-It's also marketable =).
-
-Alternative names proposed: lift, loopover
