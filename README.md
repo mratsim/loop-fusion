@@ -43,7 +43,7 @@ forEach x in a, y in b, z in c:
 forEach i, x in a, y in b, z in c:
   d.add (x + y) * z * i
 
-@[0, 140, 320]
+echo d # @[0, 140, 320]
 ```
 
 ## Future API and naming
@@ -80,26 +80,6 @@ let c = @[10, 10, 10]
 let d = @[100, 200, 300]
 
 elementwise(d,a,b,c):
-  let z = b + c
-  echo d + a * z
-
-# 114
-# 230
-# 348
-```
-
-Further developement might offer the following syntax:
-
-```Nim
-import loopfusion/experimental
-
-let a = @[1, 2, 3]
-let b = @[4, 5, 6]
-let c = @[10, 10, 10]
-
-let d = @[100, 200, 300]
-
-elementwise:
   let z = b + c
   echo d + a * z
 
