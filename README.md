@@ -43,27 +43,7 @@ forEach x in a, y in b, z in c:
 forEach i, x in a, y in b, z in c:
   d.add (x + y) * z * i
 
-# index: 0, 120
-# index: 1, 140
-# index: 2, 160
-```
-
-```Nim
-import loopfusion
-
-let a = @[1, 2, 3]
-let b = @[11, 12, 13]
-let c = @[10, 10, 10]
-
-let d = @[5, 6, 7]
-
-loopFusion(d,a,b,c):
-  let z = b + c
-  echo d + a * z
-
-# 26
-# 50
-# 76
+@[0, 140, 320]
 ```
 
 ## Future API and naming
@@ -71,22 +51,6 @@ loopFusion(d,a,b,c):
 Suggestions welcome.
 
 I have noted the following:
-
-### Names
-
-Loopfusion might be a bit confusing since there is no loop to fuse at start.
-In spirit however, it is similar while "real" loop fusion merge multiple loops over multiple sequences.
-
-Alternative names proposed: lift, loopover
-
-At one point it would be convenient to have an `elementwise` block that does:
-
-```Nim
-elementwise:
-  a += b * c
-```
-
-Naming up to discussion as well.
 
 ### Pending upstream
 
@@ -101,3 +65,61 @@ let c = forEach a in As, b in Bs:
 
 echo c # @[11, 22, 33]
 ```
+
+### Experimental features
+
+In the experimental folder you will find an `elementwise` macro that avoids the need to specify an index name.
+
+```Nim
+import loopfusion/experimental
+
+let a = @[1, 2, 3]
+let b = @[4, 5, 6]
+let c = @[10, 10, 10]
+
+let d = @[100, 200, 300]
+
+elementwise(d,a,b,c):
+  let z = b + c
+  echo d + a * z
+
+# 114
+# 230
+# 348
+```
+
+Further developement might offer the following syntax:
+
+```Nim
+import loopfusion/experimental
+
+let a = @[1, 2, 3]
+let b = @[4, 5, 6]
+let c = @[10, 10, 10]
+
+let d = @[100, 200, 300]
+
+elementwise:
+  let z = b + c
+  echo d + a * z
+
+# 114
+# 230
+# 348
+```
+
+However this might makes the following quite brittle:
+```Nim
+elementwise:
+  let z = b[1] + c[2] # How to tell that b[1] and c[2] are invariants? This is "untyped" when the macro operates.
+  echo d + a * z
+```
+
+### Names
+
+The library name "Loop fusion" might be a bit confusing since there is no loop to fuse at start.
+In spirit however, it is similar while "real" loop fusion merge multiple loops over multiple sequences.
+
+It's also marketable =).
+
+Alternative names proposed: lift, loopover

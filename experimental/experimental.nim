@@ -10,12 +10,6 @@ proc injectParam(param: NimNode): NimNode =
       nnkPragma.newTree(ident("inject"))
     )
 
-proc pop(tree: var NimNode): NimNode =
-  ## varargs[untyped] consumes all arguments so the actual value should be popped
-  ## https://github.com/nim-lang/Nim/issues/5855
-  result = tree[tree.len-1]
-  tree.del(tree.len-1)
-
 macro generateZip(zipName: NimNode, index: untyped, enumerate: static[bool], args: varargs[typed]): untyped =
   let N = args.len
   assert N > 1, "Error: only 0 or 1 argument passed." &
@@ -147,73 +141,79 @@ macro forEachImpl[N: static[int]](
   # 5. Finalize
   result.add forLoop
 
-macro forEach*(args: varargs[untyped]): untyped =
-  ## Iterates over a variadic number of sequences
+proc replaceNodes(ast: NimNode, values: NimNode, containers: NimNode): NimNode =
+  # Args:
+  #   - The full syntax tree
+  #   - an array of replacement value
+  #   - an array of identifiers to replace
+  proc inspect(node: NimNode): NimNode =
+    case node.kind:
+    of {nnkIdent, nnkSym}:
+      for i, c in containers:
+        if node.eqIdent($c):
+          return values[i]
+      return node
+    of nnkEmpty:
+      return node
+    else:
+      var rTree = node.kind.newTree()
+      for child in node:
+        rTree.add inspect(child)
+      return rTree
 
+  result = inspect(ast)
+
+macro elementwise*(
+  containers: varargs[seq],
+  loopBody: untyped
+  ): untyped =
+  ## Loop without temporaries over any number of seq
+  ##
   ## Example:
   ##
   ## let a = @[1, 2, 3]
   ## let b = @[11, 12, 13]
   ## let c = @[10, 10, 10]
   ##
-  ## forEach [x, y, z], [a, b, c]:
-  ##   echo (x + y) * z
+  ## let d = @[5, 6, 7]
+  ##
+  ## loopFusion(d,a,b,c):
+  ##   let z = b + c
+  ##   echo d + a * z
 
-  # In an untyped context, we can't deal with types at all so we reformat the args
-  # and then pass the new argument to a typed macro
+  let N = containers.len
 
-  var params = args
-  var loopBody = params.pop
+  # 2. Prepare the replacement values
+  var values = nnkBracket.newTree
+  for i in 0 ..< N:
+    values.add ident($containers[i] & "_loopFusion_")
 
-  var index = getType(int) # to be replaced with the index variable if applicable
-  var values = nnkBracket.newTree()
-  var containers = nnkBracket.newTree()
-  var N = 0
-  var enumerate = false
+  # 3. Replace the AST
+  let replacedAST = replaceNodes(loopBody, values, containers)
 
-  for arg in params:
-    case arg.kind:
-    of nnkIdent:
-      if N == 0:
-        index = arg
-        enumerate = true
-      else:
-        error "Syntax error: argument " & ($arg.kind).substr(3) & " in position #" & $N & " was unexpected."
-    of nnkInfix:
-      if eqIdent(arg[0], "in"):
-        values.add arg[1]
-        containers.add arg[2] # TODO: use an intermediate assignation if it's a result of a proc to avoid calling it multiple time
-      else:
-        error "Syntax error: argument " & ($arg.kind).substr(3) & " in position #" & $N & " was unexpected."
-    else:
-      echo "here"
-      error "Syntax error: argument " & ($arg.kind).substr(3) & " in position #" & $N & " was unexpected."
-    inc N
+  # 4. ForEach wants array
+  var arrayContainer = nnkBracket.newTree
+  for i in 0 ..< N:
+    arrayContainer.add containers[i]
 
-  if enumerate:
-    result = quote do:
-      forEachImpl(`index`, true, `values`, `containers`, `loopBody`)
-  else:
-    result = quote do:
-      forEachImpl(`index`, false, `values`, `containers`, `loopBody`)
+  # 5. Finalize
+  var index = getType(int) # Dummy index
 
+  result = quote do:
+    forEachImpl(`index`, false, `values`, `arrayContainer`, `replacedAST`)
 
 when isMainModule:
   block:
     let a = @[1, 2, 3]
-    let b = @[11, 12, 13]
+    let b = @[4, 5, 6]
     let c = @[10, 10, 10]
 
-    forEach x in a, y in b, z in c:
-      echo (x + y) * z
+    let d = @[100, 200, 300]
 
-  block:
-    let a = @[1, 2, 3]
-    let b = @[11, 12, 13]
-    let c = @[10, 10, 10]
-    var d: seq[int] = @[]
+    elementwise(d,a,b,c):
+      let z = b + c
+      echo d + a * z
 
-    forEach i, x in a, y in b, z in c:
-      d.add (x + y) * z * i
-
-    echo d
+    # 114
+    # 230
+    # 348
