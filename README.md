@@ -13,13 +13,6 @@ Iterate efficiently over a variadic number of containers.
 
 The containers can be seq of any type. In the future this will be generalized to `openarray` or even an `Iterable` concept.
 
-### Known limitations
-
-At the moment:
-
-  - all the seqs must contain the same element type.
-  - the iteration values cannot be assigned to.
-
 ## Usage
 
 ```Nim
@@ -68,6 +61,14 @@ block: # With mutation, index and multiple statements
     x += tmp
 
   doAssert a == @[1, 4, 9]
+
+block: # With iteration on seq of different types
+  let a = @[1, 2, 3]
+  let b = @[false, true, true]
+
+  forEach integer in a, boolean in b:
+    if boolean:
+      echo integer
 ```
 
 ## Name

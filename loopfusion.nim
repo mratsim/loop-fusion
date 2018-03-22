@@ -20,7 +20,8 @@ macro generateZip(
                   enumerate: static[bool],
                   containers: varargs[typed],
                   mutables: static[seq[int]] # Those are a seq[bool]: https://github.com/nim-lang/Nim/issues/7375
-                  ): untyped =
+                  ): typed =
+
   let N = containers.len
   assert N > 1, "Error: only 0 or 1 argument passed." &
     "\nThe zip macros should be called directly " &
@@ -119,10 +120,11 @@ macro forEachImpl[N: static[int]](
   index: untyped,
   enumerate: static[bool],
   values: untyped,
-  containers: array[N, typed],
+  containers: varargs[typed],
   mutables: static[array[N, int]], # Those are a seq[bool]: https://github.com/nim-lang/Nim/issues/7375
   loopBody: untyped
-  ): untyped =
+  ): typed =
+
   # 1. Initialization
   result = newStmtList()
 
@@ -139,6 +141,7 @@ macro forEachImpl[N: static[int]](
                   genSym(nskIterator,"enumerateZipImpl_" & $N & "_")
                 else:
                   genSym(nskIterator,"zipImpl_" & $N & "_")
+
   result.add getAST(generateZip(zipName, index, enumerate, containers, mutables))
 
   # 3. Creating the call
@@ -156,7 +159,7 @@ macro forEachImpl[N: static[int]](
   # 5. Finalize
   result.add forLoop
 
-macro forEach*(args: varargs[untyped]): untyped =
+macro forEach*(args: varargs[untyped]): typed =
   ## Iterates over a variadic number of sequences
 
   ## Example:
@@ -174,9 +177,9 @@ macro forEach*(args: varargs[untyped]): untyped =
   var params = args
   var loopBody = params.pop
 
-  var index = getType(int) # to be replaced with the index variable if applicable
+  var index = getType(int)              # to be replaced with the index variable if applicable
   var values = nnkBracket.newTree()
-  var containers = nnkBracket.newTree()
+  var containers = nnkArgList.newTree()
   var mutables: seq[bool] = @[]
   var N = 0
   var enumerate = false
@@ -256,3 +259,11 @@ when isMainModule:
       x += tmp
 
     doAssert a == @[1, 4, 9]
+
+  block: # With iteration on seq of different types
+    let a = @[1, 2, 3]
+    let b = @[false, true, true]
+
+    forEach integer in a, boolean in b:
+      if boolean:
+        echo integer
