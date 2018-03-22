@@ -25,24 +25,49 @@ At the moment:
 ```Nim
 import loopfusion
 
-let a = @[1, 2, 3]
-let b = @[11, 12, 13]
-let c = @[10, 10, 10]
+block: # Simple
+  let a = @[1, 2, 3]
+  let b = @[11, 12, 13]
+  let c = @[10, 10, 10]
 
-forEach x in a, y in b, z in c:
-  echo (x + y) * z
+  forEach x in a, y in b, z in c:
+    echo (x + y) * z
 
-# 120
-# 140
-# 160
+  # 120
+  # 140
+  # 160
 
-var d: seq[int] = @[]
+block: # With index
+  let a = @[1, 2, 3]
+  let b = @[11, 12, 13]
+  let c = @[10, 10, 10]
+  var d: seq[int] = @[]
 
-# i is the iteration index [0, 1, 2]
-forEach i, x in a, y in b, z in c:
-  d.add (x + y) * z * i
+  forEach i, x in a, y in b, z in c:
+    d.add i + x + y + z
 
-echo d # @[0, 140, 320]
+  doAssert d == @[22, 25, 28]
+
+block: # With mutation
+  var a = @[1, 2, 3]
+  let b = @[11, 12, 13]
+  let c = @[10, 10, 10]
+
+  forEach x in var a, y in b, z in c:
+    x += y * z
+
+  doAssert a == @[111, 122, 133]
+
+block: # With mutation, index and multiple statements
+  var a = @[1, 2, 3]
+  let b = @[11, 12, 13]
+  let c = @[10, 10, 10]
+
+  forEach i, x in var a, y in b, z in c:
+    let tmp = i * (y - z)
+    x += tmp
+
+  doAssert a == @[1, 4, 9]
 ```
 
 ## Name
