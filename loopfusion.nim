@@ -10,6 +10,60 @@ proc injectParam(param: NimNode): NimNode =
       nnkPragma.newTree(ident("inject"))
     )
 
+macro getOutputSubtype(values: untyped, containers: varargs[typed], loopBody: untyped): untyped =
+  # Get the type of an expression on items of sevaral containers
+
+  # This is the macro equivalent to the following template.
+  # There is no simpler way as `type` cannot return void: https://github.com/nim-lang/Nim/issues/7397
+  #
+  # template test(a, b, ...: seq[int], loopBody: untyped): typedesc =
+  #
+  #   template test_type(): untyped =
+  #     type((
+  #       block:
+  #         var
+  #           x{.inject.}: type(items(a))
+  #           y{.inject.}: type(items(b));
+  #           ...
+  #         loopBody
+  #       ))
+  #
+  #   when compiles(test_type()):
+  #     test_type()
+  #   else:
+  #     void
+
+
+  let N = values.len
+  assert containers.len == N
+
+  var inject_params = nnkVarSection.newTree()
+
+  for i in 0 ..< N:
+    inject_params.add nnkIdentDefs.newTree(
+      injectParam(values[i]),
+      getSubType(containers[i]),
+      newEmptyNode()
+    )
+
+  let loopBodyType = nnkTypeOfExpr.newTree(
+      nnkBlockStmt.newTree(
+        newEmptyNode(),
+        nnkStmtList.newTree(
+          inject_params,
+          loopBody
+        )
+      )
+  )
+
+  result = quote do:
+    when compiles(`loopBodyType`):
+      # If it's void it fails to compile
+      # Not sure what happens if it fails due to user error.
+      `loopBodyType`
+    else:
+      void
+
 proc pop(tree: var NimNode): NimNode =
   result = tree[tree.len-1]
   tree.del(tree.len-1)
@@ -23,6 +77,7 @@ macro generateZip(
                   ): typed =
 
   let N = containers.len
+  assert mutables.len == N
   assert N > 1, "Error: only 0 or 1 argument passed." &
     "\nThe zip macros should be called directly " &
     "with all input sequences like so: zip(s1, s2, s3)."
@@ -126,7 +181,10 @@ macro forEachImpl[N: static[int]](
   containers: varargs[typed],
   mutables: static[array[N, int]], # Those are a seq[bool]: https://github.com/nim-lang/Nim/issues/7375
   loopBody: untyped
-  ): typed =
+  ): untyped =
+
+  assert values.len == N
+  assert containers.len == N
 
   # 1. Initialization
   result = newStmtList()
@@ -139,7 +197,16 @@ macro forEachImpl[N: static[int]](
   # 3. Create the index injected if applicable
   let idx_inject = injectParam(index)
 
-  # 2. Generate the matching zip iterator
+  # 4. Checking the result type and creating put it in temp space if it's
+  #    not void
+  let outType = getAST(getOutputSubtype(values,containers, loopBody))
+  let loopResult = genSym(nskVar, "loopfusion_result_")
+
+  result.add quote do:
+    when not (`outType` is void):
+      var `loopResult`: seq[`outType`] = @[]
+
+  # 5. Generate the matching zip iterator
   let zipName = if enumerate:
                   genSym(nskIterator,"loopfusion_enumerateZipImpl_" & $N & "_")
                 else:
@@ -147,22 +214,31 @@ macro forEachImpl[N: static[int]](
 
   result.add getAST(generateZip(zipName, index, enumerate, containers, mutables))
 
-  # 3. Creating the call
+  # 6. Creating the call
   var zipCall = newCall(zipName)
   containers.copyChildrenTo zipCall
 
-  # 4. For statement
+  # 7. For statement/expression
   var forLoop = nnkForStmt.newTree()
   if enumerate:
     forLoop.add idx_inject
   idents_inject.copyChildrenTo forLoop
   forLoop.add zipCall
-  forLoop.add loopBody
 
-  # 5. Finalize
+  forLoop.add quote do:
+    when `outType` is void:
+      `loopbody`
+    else:
+      `loopResult`.add `loopBody`
+
+  # 8. Finalize
   result.add forLoop
+  result.add quote do:
+    when not (`outType` is void):
+      `loopResult`
 
-macro forEach*(args: varargs[untyped]): typed =
+
+macro forEach*(args: varargs[untyped]): untyped =
   ## Iterates over a variadic number of sequences
 
   ## Example:
@@ -270,3 +346,13 @@ when isMainModule:
     forEach integer in a, boolean in b:
       if boolean:
         echo integer
+
+  block: # With an expression
+    let a = @[1, 2, 3]
+    let b = @[4, 5, 6]
+
+
+    let c = forEach(x in a, y in b):
+      x + y
+
+    doAssert c == @[5, 7, 9]

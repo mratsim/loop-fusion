@@ -69,7 +69,19 @@ block: # With iteration on seq of different types
   forEach integer in a, boolean in b:
     if boolean:
       echo integer
+
+block: # With an expression
+  let a = @[1, 2, 3]
+  let b = @[4, 5, 6]
+
+
+  let c = forEach(x in a, y in b):
+    x + y
+
+  doAssert c == @[5, 7, 9]
 ```
+
+Note at the moment the expression must return a value for each element.
 
 ## Name
 
