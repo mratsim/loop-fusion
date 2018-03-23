@@ -7,6 +7,8 @@ license       = "MIT or Apache License 2.0"
 ### Dependencies
 requires "nim >= 0.18.0"
 
+skipDirs = @["experimental", "build", "tests"]
+
 # ### Helper functions
 # proc test(name: string, defaultLang = "c") =
 #   if not dirExists "build":
