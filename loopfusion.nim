@@ -48,7 +48,7 @@ macro generateZip(
 
   # 2.2 Parameters
   for i in 0 ..< N:
-    let s = newIdentDefs(ident("seq" & $i), containers[i].getTypeInst)
+    let s = newIdentDefs(ident("loopfusion_container" & $i), containers[i].getTypeInst)
     zipParams[i+1] = s
 
   # 3. Body
@@ -56,24 +56,27 @@ macro generateZip(
 
   # 3.1 Check that the length of the seqs are the same
   let container0 = containers[0]
-  let size0 = newIdentNode("size0")
+  let size0 = newIdentNode("loopfusion_size0")
   zipBody.add quote do:
     let `size0` = `container0`.len
 
-  for i, t in containers:
-    let size_t = newIdentNode("checksize_" & $i)
-    let check = quote do:
-      let `size_t` = `t`.len
-      assert(`size0` == `size_t`, "ForEach macro: parameter " & `t`.astTostr &
-                                  " in position #" & $(`i`) &
-                                  " has a different length.")
-    zipBody.add check
+  block:
+    var i = 1 # we don't check the size0 of the first container
+    while i < containers.len:
+      let t = containers[i]
+      let check = quote do:
+        assert(`size0` == `t`.len, "ForEach macro: parameter " &
+          `t`.astTostr &
+          " in position #" & $(`i`) &
+          " has a different length.")
+      zipBody.add check
+      inc i
 
   # 3.2 We setup the loop index
   let iter = if enumerate:
                 newIdentNode($index)
               else:
-                newIdentNode("i")
+                newIdentNode("loopfusion_index_")
   let iter_inject = if enumerate: injectParam(iter)
                     else: iter
 
@@ -138,9 +141,9 @@ macro forEachImpl[N: static[int]](
 
   # 2. Generate the matching zip iterator
   let zipName = if enumerate:
-                  genSym(nskIterator,"enumerateZipImpl_" & $N & "_")
+                  genSym(nskIterator,"loopfusion_enumerateZipImpl_" & $N & "_")
                 else:
-                  genSym(nskIterator,"zipImpl_" & $N & "_")
+                  genSym(nskIterator,"loopfusion_zipImpl_" & $N & "_")
 
   result.add getAST(generateZip(zipName, index, enumerate, containers, mutables))
 
