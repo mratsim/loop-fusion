@@ -97,7 +97,7 @@ block: # With arrays + seq, mutation, index and multiple statements
 
 Expressions must return value of the same types, i.e. you can't return `void`/no value at some iterations and a concrete value at other iterations.
 
-Due to parsing limitations, expressions `let foo = forEach(...)` require parenthesis due to parsing limitations.
+Due to parsing limitations, expressions `let foo = forEach(...)` require parenthesis.
 
 ## Name
 
