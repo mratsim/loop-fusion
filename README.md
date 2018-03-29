@@ -11,7 +11,8 @@ Iterate efficiently over a variadic number of containers.
 
 ## Status
 
-The containers can be seq of any type. In the future this will be generalized to `openarray` or even an `Iterable` concept.
+The containers can be any number of seq, arrays or openarray of any subtype.
+You can enumerate on a loop index of your choice, it must be the first parameter.
 
 ## Usage
 
@@ -79,9 +80,24 @@ block: # With an expression
     x + y
 
   doAssert c == @[5, 7, 9]
+
+
+block: # With arrays + seq, mutation, index and multiple statements
+  var a = [1, 2, 3]
+  let b = [11, 12, 13]
+  let c = @[10, 10, 10]
+
+  forEach i, x in var a, y in b, z in c:
+    let tmp = i * (y - z)
+    x += tmp
+
+  doAssert a == [1, 4, 9]
+
 ```
 
-Note at the moment the expression must return a value for each element.
+Expressions must return value of the same types, i.e. you can't return `void`/no value at some iterations and a concrete value at other iterations.
+
+Due to parsing limitations, expressions `let foo = forEach(...)` require parenthesis due to parsing limitations.
 
 ## Name
 
@@ -108,7 +124,7 @@ echo c # @[11, 22, 33]
 
 ### Experimental features
 
-In the experimental folder you will find an `elementwise` macro that avoids the need to specify an index name.
+In the experimental folder you will find an `elementwise` macro that avoids the need to specify value names.
 
 ```Nim
 import loopfusion/experimental

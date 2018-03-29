@@ -2,7 +2,15 @@ import macros
 
 proc getSubType(T: NimNode): NimNode =
   # Get the subtype T of an input
-  result = getTypeInst(T)[1]
+
+  let baseTy = getTypeInst(T)
+  if eqIdent(baseTy[0], "seq") or eqIdent(baseTy, "openarray"):
+    result = baseTy[1]
+  elif eqIdent(baseTy[0], "array"):
+    result = baseTy[2]
+  else:
+    error "Unsupported container type: " & $baseTy[0]
+  echo result.treerepr
 
 proc injectParam(param: NimNode): NimNode =
   nnkPragmaExpr.newTree(
@@ -239,11 +247,11 @@ macro forEachImpl[N: static[int]](
 
 
 macro forEach*(args: varargs[untyped]): untyped =
-  ## Iterates over a variadic number of sequences
+  ## Iterates over a variadic number of sequences or arrays
 
   ## Example:
   ##
-  ## let a = @[1, 2, 3]
+  ## let a = [1, 2, 3]
   ## let b = @[11, 12, 13]
   ## let c = @[10, 10, 10]
   ##
@@ -356,3 +364,15 @@ when isMainModule:
       x + y
 
     doAssert c == @[5, 7, 9]
+
+
+  block: # With arrays + seq, mutation, index and multiple statements
+    var a = [1, 2, 3]
+    let b = [11, 12, 13]
+    let c = @[10, 10, 10]
+
+    forEach i, x in var a, y in b, z in c:
+      let tmp = i * (y - z)
+      x += tmp
+
+    doAssert a == [1, 4, 9]
