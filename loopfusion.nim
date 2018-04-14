@@ -10,7 +10,6 @@ proc getSubType(T: NimNode): NimNode =
     result = baseTy[2]
   else:
     error "Unsupported container type: " & $baseTy[0]
-  echo result.treerepr
 
 proc injectParam(param: NimNode): NimNode =
   nnkPragmaExpr.newTree(
