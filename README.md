@@ -24,7 +24,7 @@ block: # Simple
   let b = @[11, 12, 13]
   let c = @[10, 10, 10]
 
-  forEach x in a, y in b, z in c:
+  forZip x in a, y in b, z in c:
     echo (x + y) * z
 
   # 120
@@ -37,7 +37,7 @@ block: # With index
   let c = @[10, 10, 10]
   var d: seq[int] = @[]
 
-  forEach i, x in a, y in b, z in c:
+  forZip i, x in a, y in b, z in c:
     d.add i + x + y + z
 
   doAssert d == @[22, 25, 28]
@@ -47,7 +47,7 @@ block: # With mutation
   let b = @[11, 12, 13]
   let c = @[10, 10, 10]
 
-  forEach x in var a, y in b, z in c:
+  forZip x in var a, y in b, z in c:
     x += y * z
 
   doAssert a == @[111, 122, 133]
@@ -57,7 +57,7 @@ block: # With mutation, index and multiple statements
   let b = @[11, 12, 13]
   let c = @[10, 10, 10]
 
-  forEach i, x in var a, y in b, z in c:
+  forZip i, x in var a, y in b, z in c:
     let tmp = i * (y - z)
     x += tmp
 
@@ -67,7 +67,7 @@ block: # With iteration on seq of different types
   let a = @[1, 2, 3]
   let b = @[false, true, true]
 
-  forEach integer in a, boolean in b:
+  forZip integer in a, boolean in b:
     if boolean:
       echo integer
 
@@ -76,7 +76,7 @@ block: # With an expression
   let b = @[4, 5, 6]
 
 
-  let c = forEach(x in a, y in b):
+  let c = forZip(x in a, y in b):
     x + y
 
   doAssert c == @[5, 7, 9]
@@ -87,7 +87,7 @@ block: # With arrays + seq, mutation, index and multiple statements
   let b = [11, 12, 13]
   let c = @[10, 10, 10]
 
-  forEach i, x in var a, y in b, z in c:
+  forZip i, x in var a, y in b, z in c:
     let tmp = i * (y - z)
     x += tmp
 
@@ -97,7 +97,7 @@ block: # With arrays + seq, mutation, index and multiple statements
 
 Expressions must return value of the same types, i.e. you can't return `void`/no value at some iterations and a concrete value at other iterations.
 
-Due to parsing limitations, expressions `let foo = forEach(...)` require parenthesis.
+Due to parsing limitations, expressions `let foo = forZip(...)` require parenthesis.
 
 ## Name
 

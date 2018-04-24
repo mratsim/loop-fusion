@@ -127,7 +127,7 @@ macro generateZip(
     while i < containers.len:
       let t = containers[i]
       let check = quote do:
-        assert(`size0` == `t`.len, "ForEach macro: parameter " &
+        assert(`size0` == `t`.len, "forZip macro: parameter " &
           `t`.astTostr &
           " in position #" & $(`i`) &
           " has a different length.")
@@ -181,7 +181,7 @@ macro generateZip(
   # 4. Make it visible
   result.add zipImpl
 
-macro forEachImpl[N: static[int]](
+macro forZipImpl[N: static[int]](
   index: untyped,
   enumerate: static[bool],
   values: untyped,
@@ -245,7 +245,7 @@ macro forEachImpl[N: static[int]](
       `loopResult`
 
 
-macro forEach*(args: varargs[untyped]): untyped =
+macro forZip*(args: varargs[untyped]): untyped =
   ## Iterates over a variadic number of sequences or arrays
 
   ## Example:
@@ -254,7 +254,7 @@ macro forEach*(args: varargs[untyped]): untyped =
   ## let b = @[11, 12, 13]
   ## let c = @[10, 10, 10]
   ##
-  ## forEach [x, y, z], [a, b, c]:
+  ## forZip [x, y, z], [a, b, c]:
   ##   echo (x + y) * z
 
   # In an untyped context, we can't deal with types at all so we reformat the args
@@ -295,11 +295,14 @@ macro forEach*(args: varargs[untyped]): untyped =
 
   if enumerate:
     result = quote do:
-      forEachImpl(`index`, true, `values`, `containers`, `mutables`,`loopBody`)
+      forZipImpl(`index`, true, `values`, `containers`, `mutables`,`loopBody`)
   else:
     result = quote do:
-      forEachImpl(`index`, false, `values`, `containers`, `mutables`,`loopBody`)
+      forZipImpl(`index`, false, `values`, `containers`, `mutables`,`loopBody`)
 
+
+template forEach*(args: varargs[untyped]): untyped {.deprecated: "forEach has been renamed forZip".}=
+  forZip(args)
 
 when isMainModule:
   block: # Simple
@@ -307,7 +310,7 @@ when isMainModule:
     let b = @[11, 12, 13]
     let c = @[10, 10, 10]
 
-    forEach x in a, y in b, z in c:
+    forZip x in a, y in b, z in c:
       echo (x + y) * z
 
     # 120
@@ -320,7 +323,7 @@ when isMainModule:
     let c = @[10, 10, 10]
     var d: seq[int] = @[]
 
-    forEach i, x in a, y in b, z in c:
+    forZip i, x in a, y in b, z in c:
       d.add i + x + y + z
 
     doAssert d == @[22, 25, 28]
@@ -330,7 +333,7 @@ when isMainModule:
     let b = @[11, 12, 13]
     let c = @[10, 10, 10]
 
-    forEach x in var a, y in b, z in c:
+    forZip x in var a, y in b, z in c:
       x += y * z
 
     doAssert a == @[111, 122, 133]
@@ -340,7 +343,7 @@ when isMainModule:
     let b = @[11, 12, 13]
     let c = @[10, 10, 10]
 
-    forEach i, x in var a, y in b, z in c:
+    forZip i, x in var a, y in b, z in c:
       let tmp = i * (y - z)
       x += tmp
 
@@ -350,7 +353,7 @@ when isMainModule:
     let a = @[1, 2, 3]
     let b = @[false, true, true]
 
-    forEach integer in a, boolean in b:
+    forZip integer in a, boolean in b:
       if boolean:
         echo integer
 
@@ -359,7 +362,7 @@ when isMainModule:
     let b = @[4, 5, 6]
 
 
-    let c = forEach(x in a, y in b):
+    let c = forZip(x in a, y in b):
       x + y
 
     doAssert c == @[5, 7, 9]
@@ -370,7 +373,7 @@ when isMainModule:
     let b = [11, 12, 13]
     let c = @[10, 10, 10]
 
-    forEach i, x in var a, y in b, z in c:
+    forZip i, x in var a, y in b, z in c:
       let tmp = i * (y - z)
       x += tmp
 
