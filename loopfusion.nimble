@@ -10,16 +10,16 @@ requires "nim >= 0.18.0"
 skipDirs = @["experimental", "build", "tests"]
 
 # ### Helper functions
-# proc test(name: string, defaultLang = "c") =
-#   if not dirExists "build":
-#     mkDir "build"
-#   if not dirExists "nimcache":
-#     mkDir "nimcache"
-#   --run
-#   --nimcache: "nimcache"
-#   switch("out", ("./build/" & name))
-#   setCommand defaultLang, "tests/" & name & ".nim"
+proc test(name: string, defaultLang = "c") =
+  if not dirExists "build":
+    mkDir "build"
+  if not dirExists "nimcache":
+    mkDir "nimcache"
+  --run
+  --nimcache: "nimcache"
+  switch("out", ("./build/" & name))
+  setCommand defaultLang, "tests/" & name & ".nim"
 
-# ### tasks
-# task test, "Run all tests":
-#   test "all_tests"
+### tasks
+task test, "Run all tests":
+  test "all_tests"
