@@ -114,13 +114,28 @@ macro generateZip(
     zipParams[i+1] = s
 
   # 3. Body
-  var zipBody = newStmtList()
+  # defined below, see Note
+  # var zipBody = newStmtList()
 
   # 3.1 Check that the length of the seqs are the same
   let container0 = containers[0]
   let size0 = newIdentNode("loopfusion_size0")
-  zipBody.add quote do:
-    let `size0` = `container0`.len
+  # NOTE: using quote do will fail with an `illegal capture` error,
+  # hence build AST manually
+  #zipBody.add quote do:
+  #  let `size0` = `container0`.len
+  var zipBody =  nnkStmtList.newTree(
+    nnkLetSection.newTree(
+      nnkIdentDefs.newTree(
+        newIdentNode($size0),
+        newEmptyNode(),
+        nnkDotExpr.newTree(
+          newIdentNode($container0),
+          newIdentNode("len")
+        )
+      )
+    )
+  )
 
   block:
     var i = 1 # we don't check the size0 of the first container
