@@ -105,3 +105,11 @@ The library name "Loop fusion" might be a bit confusing since there is no loop t
 In spirit however, it is similar while "real" loop fusion merge multiple loops over multiple sequences.
 
 It's also marketable =) (check loop fusion + \<insert favorite language\>)
+
+## Implementation details
+
+Many would probably be curious why I first generate a zip iterator then a for-loop instead of for-looping directly.
+
+This is because it started as a variadic zip proof of concept for [Arraymancer](https://github.com/mratsim/Arraymancer) for which I need an iterator to abstract iteration details, especially in the context of multithreading.
+
+There should be no performance cost as Nim inlines iterators as if the loop was written manually.
