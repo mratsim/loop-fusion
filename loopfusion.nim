@@ -304,6 +304,21 @@ macro forZip*(args: varargs[untyped]): untyped =
           mutables.add false
       else:
         error "Syntax error: argument " & ($arg.kind).substr(3) & " in position #" & $N & " was unexpected."
+    of nnkStmtList:
+      # for the case where an arg is
+      # `contains(x, idx)`
+      let call = arg[0]
+      expectKind(call, nnkCall)
+      if eqIdent(call[0], "contains"):
+        values.add call[2]
+        if call[1].kind == nnkVarTy:
+          containers.add call[1][0]
+          mutables.add true
+        else:
+          containers.add call[1] # TODO: use an intermediate assignation if it's a result of a proc to avoid calling it multiple time
+          mutables.add false
+      else:
+        error "Syntax error: argument " & ($arg.kind).substr(3) & " in position #" & $N & " was unexpected."
     else:
       error "Syntax error: argument " & ($arg.kind).substr(3) & " in position #" & $N & " was unexpected."
     inc N
@@ -313,9 +328,8 @@ macro forZip*(args: varargs[untyped]): untyped =
       forZipImpl(`index`, true, `values`, `containers`, `mutables`,`loopBody`)
   else:
     result = quote do:
-      forZipImpl(`index`, false, `values`, `containers`, `mutables`,`loopBody`)
+      forZipImpl(`index`, false, `values`, `containers`, `mutables`, `loopBody`)
 
 
 template forEach*(args: varargs[untyped]): untyped {.deprecated: "forEach has been renamed forZip".}=
   forZip(args)
-
