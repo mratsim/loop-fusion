@@ -196,15 +196,7 @@ macro generateZip(
   # 4. Make it visible
   result.add zipImpl
 
-macro forZipImpl[N: static[int]](
-  index: untyped,
-  enumerate: static[bool],
-  values: untyped,
-  containers: varargs[typed],
-  mutables: static[array[N, int]], # Those are a seq[bool]: https://github.com/nim-lang/Nim/issues/7375
-  loopBody: untyped
-  ): untyped =
-
+template forZipSharedImpl {.dirty.} =
   assert values.len == N
   assert containers.len == N
 
@@ -259,6 +251,28 @@ macro forZipImpl[N: static[int]](
     when not (`outType` is void):
       `loopResult`
 
+when (NimMajor, NimMinor, NimPatch) >= (1, 7, 3):
+  macro forZipImpl(
+    index: untyped,
+    enumerate: static[bool],
+    values: untyped,
+    containers: varargs[typed],
+    mutables: static[seq[int]], # Those are a seq[bool]: https://github.com/nim-lang/Nim/issues/7375
+    loopBody: untyped
+    ): untyped =
+
+    let N = mutables.len
+    forZipSharedImpl()
+else:
+  macro forZipImpl[N: static[int]](
+    index: untyped,
+    enumerate: static[bool],
+    values: untyped,
+    containers: varargs[typed],
+    mutables: static[array[N, int]], # Those are a seq[bool]: https://github.com/nim-lang/Nim/issues/7375
+    loopBody: untyped
+    ): untyped =
+    forZipSharedImpl()
 
 macro forZip*(args: varargs[untyped]): untyped =
   ## Iterates over a variadic number of sequences or arrays
