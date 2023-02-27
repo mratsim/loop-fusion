@@ -196,15 +196,16 @@ macro generateZip(
   # 4. Make it visible
   result.add zipImpl
 
-macro forZipImpl[N: static[int]](
+macro forZipImpl(
   index: untyped,
   enumerate: static[bool],
   values: untyped,
   containers: varargs[typed],
-  mutables: static[array[N, int]], # Those are a seq[bool]: https://github.com/nim-lang/Nim/issues/7375
+  mutables: seq[bool], # Those are a seq[bool]: https://github.com/nim-lang/Nim/issues/7375
   loopBody: untyped
   ): untyped =
 
+  let N = mutables.len
   assert values.len == N
   assert containers.len == N
 
@@ -258,7 +259,6 @@ macro forZipImpl[N: static[int]](
   result.add quote do:
     when not (`outType` is void):
       `loopResult`
-
 
 macro forZip*(args: varargs[untyped]): untyped =
   ## Iterates over a variadic number of sequences or arrays
