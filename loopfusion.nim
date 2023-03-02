@@ -257,7 +257,7 @@ when (NimMajor, NimMinor, NimPatch) >= (1, 9, 1):
     enumerate: static[bool],
     values: untyped,
     containers: varargs[typed],
-    mutables: static[seq[bool]], # Those are a seq[bool]: https://github.com/nim-lang/Nim/issues/7375
+    mutables: seq[bool], # Those are a seq[bool]: https://github.com/nim-lang/Nim/issues/7375
     loopBody: untyped
     ): untyped =
 
