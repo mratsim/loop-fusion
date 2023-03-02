@@ -251,7 +251,7 @@ template forZipSharedImpl {.dirty.} =
     when not (`outType` is void):
       `loopResult`
 
-when (NimMajor, NimMinor, NimPatch) >= (1, 7, 3):
+when (NimMajor, NimMinor, NimPatch) >= (1, 9, 1):
   macro forZipImpl(
     index: untyped,
     enumerate: static[bool],
